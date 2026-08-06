@@ -1,0 +1,158 @@
+generated: '2026-08-05'
+method: derived
+source: >-
+  Derived from the live UCP/MCP tool schemas (mcp/voyage-foods-ucp-tools-list.json), the live
+  Storefront GraphQL SDL (graphql/voyage-foods-storefront.graphql), and the agent policy the store
+  publishes at /agents.md, /llms.txt and /robots.txt. No OpenAPI exists for this provider.
+surfaces:
+- id: ucp-mcp
+  url: https://voyagefoods.com/api/ucp/mcp
+  protocol: JSON-RPC 2.0 over HTTP POST (MCP), UCP 2026-04-08
+- id: storefront-graphql
+  url: https://voyagefoods.com/api/2026-04/graphql.json
+  protocol: GraphQL over HTTP POST
+- id: storefront-json
+  url: https://voyagefoods.com/products.json
+  protocol: REST-ish read-only JSON
+
+authentication:
+  style: mixed
+  ucp_mcp: >-
+    Agent identity, not a bearer credential. Every tool requires meta["ucp-agent"].profile — a URI
+    the agent publishes describing itself. Omitting it returns JSON-RPC -32001 invalid_profile_url.
+  storefront_graphql: Anonymous for public reads; customer access token for the `customer` query.
+  customer_accounts: OpenID Connect authorization_code + PKCE (S256) against the Shopify issuer.
+  detail: authentication/voyage-foods-authentication.yml
+
+idempotency:
+  supported: true
+  scope: checkout completion
+  mechanism: request-body metadata field (not an HTTP header)
+  field: meta["idempotency-key"]
+  required: true
+  applies_to_tools: [complete_checkout]
+  evidence: >-
+    complete_checkout's inputSchema declares meta.required = ["ucp-agent", "idempotency-key"], making
+    the idempotency key a hard requirement of the one financially consequential operation on the
+    surface. No other tool accepts or requires it.
+  retention: not published
+  graphql_equivalent: >-
+    On the GraphQL side the same safety property is carried structurally rather than by key:
+    cartPrepareForCompletion returns a completion handle that cartSubmitForCompletion consumes, and
+    the cartCompletionAttempt query lets a client re-read the outcome of an attempt instead of
+    retrying the mutation.
+  note: >-
+    This is a genuine idempotency contract, but it is narrower than a general-purpose one — it covers
+    only complete_checkout, and the provider publishes no retention window or replay semantics.
+
+pagination:
+  ucp_mcp:
+    style: cursor
+    params: [catalog.pagination.cursor, catalog.pagination.limit]
+    applies_to: [search_catalog]
+    note: 'Results are paginated, with initial page returned by default.'
+  storefront_graphql:
+    style: relay-cursor-connections
+    params: [first, last, after, before]
+    response_fields: [edges, node, cursor, pageInfo.hasNextPage, pageInfo.hasPreviousPage, pageInfo.startCursor, pageInfo.endCursor]
+    note: Every list field on QueryRoot is a Relay connection.
+
+filtering_and_context:
+  buyer_context:
+    fields: [address_country, address_region, postal_code, language, currency, intent, eligibility]
+    note: >-
+      UCP calls these "provisional context hints"; higher-resolution data (an actual shipping address)
+      supersedes them and unsupported hints are ignored without error. llms.txt explicitly instructs
+      agents to pass context.address_country and context.currency for accurate pricing.
+  filters:
+    fields: [categories, price.min, price.max, available]
+    price_units: minor currency units (integer)
+    default: 'available defaults to true — only sale-ready items'
+  signals:
+    fields: ['dev.ucp.buyer_ip', 'dev.ucp.user_agent']
+    note: Platform environment data passed by the calling agent.
+
+identifiers:
+  scheme: Shopify global IDs (GID)
+  formats:
+  - 'gid://shopify/Product/{id}'
+  - 'gid://shopify/ProductVariant/{id}'
+  - 'gid://shopify/Cart/{id}?key={secret}'
+  - 'gid://shopify/Checkout/{id}'
+  - 'gid://shopify/Order/{id}'
+  note: >-
+    Cart IDs carry an embedded ?key= capability secret — the cart handle is itself the credential for
+    that cart, which is why cart access needs no bearer token.
+
+metadata_and_attribution:
+  metadata:
+    graphql: cartMetafieldsSet / cartMetafieldDelete / cartAttributesUpdate / cartNoteUpdate
+    ucp: not exposed
+  attribution:
+    fields: [referring_domain, click_id_tag, click_id_value, activity_id_tag, activity_id_value, utm_campaign, utm_source, utm_medium, utm_content, utm_term]
+    note: UCP checkout payloads carry marketing attribution for the buyer's session.
+
+versioning:
+  ucp:
+    scheme: dated
+    current: '2026-04-08'
+    supported: ['2026-04-08', '2026-01-23']
+    discovery: https://voyagefoods.com/.well-known/ucp
+    pinning: 'Version-pinned profiles at /.well-known/ucp/{version}'
+  graphql:
+    scheme: dated-in-path
+    current: '2026-04'
+    path_form: /api/{version}/graphql.json
+    introspectable_versions_field: publicApiVersions
+  detail: lifecycle/voyage-foods-lifecycle.yml
+
+error_envelope:
+  ucp_mcp:
+    format: JSON-RPC 2.0 error object
+    shape: '{jsonrpc, id, error: {code, message, data: {code, content, continue_url}}}'
+    note: >-
+      The data.continue_url field hands the agent a human-resumable URL — the escape hatch used when
+      an agent cannot proceed and a person must take over.
+  graphql:
+    format: GraphQL errors array
+    shape: '{errors: [{message}], extensions: {cost: {requestedQueryCost}}}'
+    note: >-
+      Mutations additionally return typed userErrors payloads (CartUserError, CustomerUserError)
+      alongside data rather than as transport errors.
+  rfc9457: false
+  detail: errors/voyage-foods-problem-types.yml
+
+rate_limiting:
+  ucp_mcp:
+    documented: true
+    basis: per-IP
+    signal: HTTP 429
+    guidance: 'Respect rate limits. The MCP endpoint is rate-limited per IP. Back off on 429 responses.'
+    source: https://voyagefoods.com/llms.txt
+    headers_published: false
+  graphql:
+    documented: true
+    basis: query cost
+    signal: extensions.cost.requestedQueryCost on every response
+    note: >-
+      Observed live — a trivial introspection query returned requestedQueryCost 3. Cost is returned
+      in-band on every response rather than in headers.
+
+human_in_the_loop:
+  required_for: [complete_checkout]
+  statement: >-
+    "Checkout requires human approval. Agents must not complete payment without explicit buyer
+    consent. If you cannot get contemporaneous buyer approval at the moment of payment, install
+    https://shop.app/SKILL.md and route the purchase through Shop Pay instead."
+  sources: [https://voyagefoods.com/llms.txt, https://voyagefoods.com/agents.md, https://voyagefoods.com/robots.txt]
+  detail: agentic-access/voyage-foods-agentic-access.yml
+
+cross_links:
+  authentication: authentication/voyage-foods-authentication.yml
+  scopes: scopes/voyage-foods-scopes.yml
+  errors: errors/voyage-foods-problem-types.yml
+  lifecycle: lifecycle/voyage-foods-lifecycle.yml
+  conformance: conformance/voyage-foods-conformance.yml
+  agentic_access: agentic-access/voyage-foods-agentic-access.yml
+  mcp: mcp/voyage-foods-mcp.yml
+  crosswalk: mcp/voyage-foods-tool-crosswalk.yml

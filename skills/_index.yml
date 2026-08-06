@@ -1,0 +1,25 @@
+generated: '2026-08-05'
+method: generated
+source: >-
+  Generated from the live UCP/MCP tool list (mcp/voyage-foods-ucp-tools-list.json) and the live
+  Storefront GraphQL SDL (graphql/voyage-foods-storefront.graphql), both captured anonymously on
+  2026-08-05. Every operation named in these skills was verified against those two documents; none
+  was invented. Voyage Foods publishes no OpenAPI, so the MCP tool schemas and the GraphQL schema
+  are the grounding contracts.
+note: >-
+  No provider-published skills or AGENTS.md were found. The store DOES publish an agents.md, but it
+  is an agent policy and endpoint guide rather than a packaged skill; it is saved verbatim at
+  llms/voyage-foods-agents.md and its rules are carried into the skills below.
+skills:
+- file: voyage-foods-discover-catalog.md
+  name: Discover the Voyage Foods catalog
+  api: mcp/voyage-foods-mcp.yml
+  operations: [search_catalog, lookup_catalog, get_product]
+- file: voyage-foods-cart-to-checkout.md
+  name: Take a Voyage Foods cart through checkout with buyer approval
+  api: mcp/voyage-foods-mcp.yml
+  operations: [create_cart, get_cart, update_cart, cancel_cart, create_checkout, get_checkout, update_checkout, complete_checkout, cancel_checkout, get_order]
+- file: voyage-foods-graphql-storefront-read.md
+  name: Read the Voyage Foods storefront with anonymous GraphQL
+  api: graphql/voyage-foods-storefront.graphql
+  operations: [products, productByHandle, product, collection, collections, search, predictiveSearch, productRecommendations, blog, articles, page, shop, localization]

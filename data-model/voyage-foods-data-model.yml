@@ -1,0 +1,147 @@
+generated: '2026-08-05'
+method: derived
+source: >-
+  graphql/voyage-foods-storefront.graphql — derived mechanically from the live introspection result
+  (graphql/voyage-foods-storefront-introspection.json) captured anonymously from
+  https://voyagefoods.com/api/2026-04/graphql.json on 2026-08-05. Entity identifiers were confirmed
+  against the gid:// formats declared in the UCP tool schemas
+  (mcp/voyage-foods-ucp-tools-list.json).
+note: >-
+  There is no OpenAPI for this provider, so relationships are taken from GraphQL field types rather
+  than from $ref links. Only the commerce core is modelled; the full schema carries 416 types.
+identifier_scheme:
+  format: 'gid://shopify/{Type}/{id}'
+  examples:
+  - 'gid://shopify/Product/8612021108928'
+  - 'gid://shopify/ProductVariant/48477912268992'
+  - 'gid://shopify/Cart/{id}?key={secret}'
+  - 'gid://shopify/Checkout/{id}'
+  - 'gid://shopify/Order/{id}'
+  note: >-
+    Cart GIDs embed a ?key= capability secret; possession of the cart id is possession of access to
+    that cart.
+entities:
+- name: Product
+  fields: 36
+  handle_addressable: true
+  json_endpoint: /products/{handle}.json
+  relationships:
+  - {type: has_many, target: ProductVariant, via: variants}
+  - {type: has_one, target: ProductVariant, via: selectedOrFirstAvailableVariant}
+  - {type: has_many, target: Collection, via: collections}
+  - {type: has_many, target: Image, via: images}
+  - {type: has_one, target: Image, via: featuredImage}
+  - {type: has_many, target: ProductOption, via: options}
+  - {type: has_one, target: ProductPriceRange, via: priceRange}
+  - {type: has_one, target: TaxonomyCategory, via: category}
+  - {type: has_many, target: SellingPlanGroup, via: sellingPlanGroups}
+  - {type: has_many, target: Metafield, via: metafields}
+- name: ProductVariant
+  fields: 30
+  relationships:
+  - {type: belongs_to, target: Product, via: product}
+  - {type: has_one, target: MoneyV2, via: price}
+  - {type: has_one, target: MoneyV2, via: compareAtPrice}
+  - {type: has_one, target: Image, via: image}
+  - {type: has_many, target: SelectedOption, via: selectedOptions}
+  - {type: has_one, target: QuantityRule, via: quantityRule}
+  - {type: has_many, target: QuantityPriceBreak, via: quantityPriceBreaks}
+  - {type: has_many, target: StoreAvailability, via: storeAvailability}
+  note: The unit an agent adds to a cart — UCP line_items.item.id is a ProductVariant GID.
+- name: Collection
+  fields: 13
+  handle_addressable: true
+  json_endpoint: /collections/{handle}/products.json
+  relationships:
+  - {type: has_many, target: Product, via: products}
+  - {type: has_one, target: Image, via: image}
+  - {type: has_many, target: Metafield, via: metafields}
+- name: Cart
+  fields: 19
+  relationships:
+  - {type: has_many, target: CartLine, via: lines}
+  - {type: has_one, target: CartBuyerIdentity, via: buyerIdentity}
+  - {type: has_one, target: CartCost, via: cost}
+  - {type: has_one, target: CartDelivery, via: delivery}
+  - {type: has_many, target: CartDeliveryGroup, via: deliveryGroups}
+  - {type: has_many, target: CartDiscountCode, via: discountCodes}
+  - {type: has_many, target: CartDiscountAllocation, via: discountAllocations}
+  - {type: has_many, target: AppliedGiftCard, via: appliedGiftCards}
+  - {type: has_many, target: Attribute, via: attributes}
+  - {type: has_many, target: Metafield, via: metafields}
+- name: CartLine
+  fields: 11
+  relationships:
+  - {type: has_one, target: Merchandise, via: merchandise}
+  - {type: has_one, target: CartLineCost, via: cost}
+  - {type: has_many, target: CartDiscountAllocation, via: discountAllocations}
+  - {type: has_one, target: SellingPlanAllocation, via: sellingPlanAllocation}
+  note: >-
+    `merchandise` is a union (Merchandise) currently resolving to ProductVariant — the join from cart
+    back to catalog.
+- name: Order
+  fields: 41
+  relationships:
+  - {type: has_many, target: OrderLineItem, via: lineItems}
+  - {type: has_one, target: MailingAddress, via: shippingAddress}
+  - {type: has_one, target: MailingAddress, via: billingAddress}
+  - {type: has_many, target: Fulfillment, via: successfulFulfillments}
+  - {type: has_many, target: DiscountApplication, via: discountApplications}
+  - {type: has_one, target: MoneyV2, via: totalPrice}
+  - {type: has_many, target: Metafield, via: metafields}
+  access: >-
+    Not reachable from the anonymous QueryRoot — only through an authenticated `customer` context, or
+    via the UCP get_order tool.
+- name: Customer
+  fields: 18
+  relationships:
+  - {type: has_many, target: Order, via: orders}
+  - {type: has_many, target: MailingAddress, via: addresses}
+  - {type: has_one, target: MailingAddress, via: defaultAddress}
+  - {type: has_one, target: SocialLoginProvider, via: socialLoginProvider}
+  access: Requires a customer access token; gated behind the OIDC flow in scopes/voyage-foods-scopes.yml.
+- name: Blog
+  fields: 10
+  handle_addressable: true
+  relationships:
+  - {type: has_many, target: Article, via: articles}
+  - {type: has_many, target: ArticleAuthor, via: authors}
+- name: Article
+  fields: 19
+  handle_addressable: true
+  relationships:
+  - {type: belongs_to, target: Blog, via: blog}
+  - {type: has_one, target: ArticleAuthor, via: authorV2}
+  - {type: has_many, target: Comment, via: comments}
+  - {type: has_one, target: Image, via: image}
+- name: Shop
+  fields: 22
+  singleton: true
+  relationships:
+  - {type: has_one, target: Domain, via: primaryDomain}
+  - {type: has_one, target: PaymentSettings, via: paymentSettings}
+  - {type: has_one, target: ShopPolicy, via: privacyPolicy}
+  - {type: has_one, target: ShopPolicy, via: termsOfService}
+  - {type: has_one, target: ShopPolicy, via: refundPolicy}
+  - {type: has_one, target: ShopPolicy, via: shippingPolicy}
+  - {type: has_one, target: Brand, via: brand}
+core_path:
+  description: The join path an agent walks to go from intent to order.
+  steps:
+  - Collection -> Product (products)
+  - Product -> ProductVariant (variants / selectedOrFirstAvailableVariant)
+  - ProductVariant -> CartLine (merchandise)
+  - CartLine -> Cart (lines)
+  - Cart -> Checkout (cartPrepareForCompletion / UCP create_checkout with cart_id)
+  - Checkout -> Order (cartSubmitForCompletion / UCP complete_checkout)
+  - Order -> Customer (orders)
+live_catalog_observed:
+  source: https://voyagefoods.com/products.json
+  status: 200
+  note: >-
+    The published storefront catalog is a sample/bulk ordering catalog for CPG buyers (product and
+    application sample boxes, spread and cocoa-free chocolate samples), not the retail SKUs sold
+    through grocery. Collections observed: nut-free-spreads, samples, spreads-samples,
+    cocoa-free-chocolate-samples, bean-free-coffee-samples, application-samples, custom-samples,
+    marketing-sample-materials, bean-free-coffee-special-request-samples, pr-investor-sample,
+    bulk-samples, frontpage.

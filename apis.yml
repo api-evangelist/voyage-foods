@@ -1,18 +1,96 @@
 aid: voyage-foods
 name: Voyage Foods
-description: 'Voyage Foods is a company surfaced via the API Evangelist harvest backlog (source: secondary-market)
-  and added to the network as a stub for full-pipeline profiling.'
+description: 'Voyage Foods is an Oakland, California food-technology company that reengineers
+  supply-chain-constrained foods from widely available inputs — cocoa-free chocolate,
+  bean-free coffee, and peanut-free and hazelnut-free spreads built from seeds, grape seed
+  and grains — sold direct to consumers and to CPG manufacturers as bulk ingredient. Its
+  public API surface is its commerce surface: the voyagefoods.com storefront publishes a
+  Universal Commerce Protocol (UCP) merchant profile at /.well-known/ucp, a live agent-facing
+  MCP endpoint at /api/ucp/mcp exposing thirteen catalog, cart, checkout and order tools,
+  an anonymously introspectable Shopify Storefront GraphQL API, read-only product and
+  collection JSON endpoints, and an agents.md / llms.txt pair stating the store''s agent
+  access policy.'
+image: https://voyagefoods.com/cdn/shop/files/ComboTabletop_0035_1_5.jpg?v=1697240864
 url: https://raw.githubusercontent.com/api-evangelist/voyage-foods/refs/heads/main/apis.yml
 x-type: company
 x-source: harvest:secondary-market
-x-tier: stub
-x-tier-reason: harvest
 specificationVersion: '0.20'
 created: '2026-08-05'
 modified: '2026-08-05'
 tags:
 - Company
-apis: []
+- Food and Beverage
+- Consumer Packaged Goods
+- Ecommerce
+- Agentic Commerce
+- Universal Commerce Protocol
+- MCP
+- GraphQL
+- Shopify
+- Food Technology
+apis:
+- aid: voyage-foods-ucp-commerce-mcp
+  name: Voyage Foods UCP Commerce MCP API
+  description: 'The Voyage Foods storefront implements the Universal Commerce Protocol (UCP)
+    for agent-driven commerce over MCP. A JSON-RPC 2.0 endpoint at /api/ucp/mcp answers
+    tools/list anonymously with thirteen tools spanning catalog search and lookup, cart
+    lifecycle, checkout lifecycle and order retrieval, each carrying a full JSON Schema
+    2020-12 inputSchema. Payment completion requires contemporaneous human buyer approval
+    and complete_checkout requires an idempotency key.'
+  humanURL: https://voyagefoods.com/agents.md
+  baseURL: https://voyagefoods.com/api/ucp/mcp
+  tags:
+  - MCP
+  - Agentic Commerce
+  - Universal Commerce Protocol
+  - Checkout
+  - Catalog
+  properties:
+  - type: MCPServer
+    url: mcp/voyage-foods-mcp.yml
+  - type: ToolCrosswalk
+    url: mcp/voyage-foods-tool-crosswalk.yml
+  - type: Documentation
+    url: https://voyagefoods.com/agents.md
+- aid: voyage-foods-storefront-graphql
+  name: Voyage Foods Storefront GraphQL API
+  description: 'The Shopify Storefront GraphQL API as deployed on the voyagefoods.com host
+    at /api/2026-04/graphql.json. Anonymous introspection is open and returns a 416-type
+    schema with 35 QueryRoot fields (products, collections, search, predictiveSearch, cart,
+    blog/article, menu, shop, localization) and 41 Mutation fields covering the full
+    Relay-style cart lifecycle, discount and gift-card codes, delivery addresses, Shop Pay
+    payment-request sessions and customer access tokens.'
+  humanURL: https://shopify.dev/docs/api/storefront
+  baseURL: https://voyagefoods.com/api/2026-04/graphql.json
+  tags:
+  - GraphQL
+  - Ecommerce
+  - Storefront
+  - Cart
+  - Catalog
+  properties:
+  - type: GraphQL
+    url: graphql/voyage-foods-storefront.graphql
+  - type: Documentation
+    url: https://shopify.dev/docs/api/storefront
+- aid: voyage-foods-storefront-json
+  name: Voyage Foods Storefront Product JSON API
+  description: 'The read-only, unauthenticated product and collection JSON endpoints the
+    store documents for agents in agents.md — /products.json, /products/{handle}.json,
+    /collections/{handle}/products.json and /search?q={query}&type=product — returning
+    product, variant, price, weight, availability and image records for the Voyage Foods
+    sample and bulk catalog.'
+  humanURL: https://voyagefoods.com/agents.md
+  baseURL: https://voyagefoods.com/products.json
+  tags:
+  - Ecommerce
+  - Catalog
+  - Products
+  - JSON
+  - Read Only
+  properties:
+  - type: Documentation
+    url: https://voyagefoods.com/agents.md
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
@@ -20,4 +98,59 @@ maintainers:
   email: info@apis.io
 common:
 - type: Website
+  url: https://voyagefoods.com/
+- type: SecondaryMarket
   url: https://forgeglobal.com/voyage-foods_stock/
+- type: Documentation
+  url: https://voyagefoods.com/agents.md
+- type: LLMsTxt
+  url: llms/voyage-foods-llms.txt
+- type: WellKnown
+  url: well-known/voyage-foods-well-known.yml
+- type: MCPServer
+  url: mcp/voyage-foods-mcp.yml
+- type: ToolCrosswalk
+  url: mcp/voyage-foods-tool-crosswalk.yml
+- type: GraphQL
+  url: graphql/voyage-foods-storefront.graphql
+- type: Authentication
+  url: authentication/voyage-foods-authentication.yml
+- type: OAuthScopes
+  url: scopes/voyage-foods-scopes.yml
+- type: OpenIDConnect
+  url: well-known/voyage-foods-openid-configuration.json
+- type: Conventions
+  url: conventions/voyage-foods-conventions.yml
+- type: Idempotency
+  url: conventions/voyage-foods-conventions.yml
+- type: ErrorCatalog
+  url: errors/voyage-foods-problem-types.yml
+- type: Lifecycle
+  url: lifecycle/voyage-foods-lifecycle.yml
+- type: Conformance
+  url: conformance/voyage-foods-conformance.yml
+- type: DomainSecurity
+  url: security/voyage-foods-domain-security.yml
+- type: AgenticAccess
+  url: agentic-access/voyage-foods-agentic-access.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: DataModel
+  url: data-model/voyage-foods-data-model.yml
+- type: Blog
+  url: https://voyagefoods.com/blogs/partnerwithus
+- type: Support
+  url: https://voyagefoods.com/pages/contact
+- type: Pricing
+  url: https://voyagefoods.com/collections/samples
+- type: SignUp
+  url: https://voyagefoods.com/account/login
+- type: TermsOfService
+  url: https://voyagefoods.com/pages/terms-and-conditions
+- type: PrivacyPolicy
+  url: https://voyagefoods.com/pages/privacy-policy
+x-enrichment:
+  date: '2026-08-05'
+  status: enriched
+  artifacts_added: 25
+  pass: local-v1

@@ -1,0 +1,86 @@
+generated: '2026-08-05'
+method: searched
+source: https://voyagefoods.com/.well-known/
+host: https://voyagefoods.com
+notes: >-
+  voyagefoods.com is a Shopify-hosted storefront (shop id 59465728192, myshopify host
+  voyage-foods-2021.myshopify.com). The /.well-known/ surface is the Shopify platform
+  surface as deployed on the merchant's own domain. A control probe of a nonsense path
+  (/zzz-control-nonexistent-path) returned 404, so the 404s below are real misses and not
+  an SPA catch-all.
+documents:
+- path: /.well-known/ucp
+  description: Universal Commerce Protocol merchant profile (UCP 2026-04-08)
+  status: 200
+  content_type: application/json
+  file: voyage-foods-ucp.json
+- path: /.well-known/ucp/2026-04-08
+  description: Version-pinned UCP merchant profile
+  status: 200
+  content_type: application/json
+  file: null
+- path: /.well-known/openid-configuration
+  description: OpenID Connect discovery for Shopify Customer Accounts
+  status: 200
+  content_type: application/json
+  file: voyage-foods-openid-configuration.json
+- path: /.well-known/oauth-authorization-server
+  description: RFC 8414 authorization server metadata (identical body to the OIDC document)
+  status: 200
+  content_type: application/json
+  file: voyage-foods-oauth-authorization-server.json
+- path: /.well-known/security.txt
+  description: RFC 9116 security contact
+  status: 404
+- path: /.well-known/agent-card.json
+  description: A2A 1.0.0 agent card
+  status: 404
+- path: /.well-known/agent.json
+  description: A2A pre-0.3 legacy agent card
+  status: 404
+- path: /.well-known/api-catalog
+  description: RFC 9727 API catalog
+  status: 404
+- path: /.well-known/ai-plugin.json
+  description: OpenAI plugin manifest
+  status: 404
+adjacent_discovery:
+- path: /llms.txt
+  status: 200
+  content_type: text/markdown
+  file: ../llms/voyage-foods-llms.txt
+- path: /agents.md
+  status: 200
+  content_type: text/markdown
+  file: ../llms/voyage-foods-agents.md
+- path: /robots.txt
+  status: 200
+  content_type: text/plain
+  file: voyage-foods-robots.txt
+  note: >-
+    robots.txt carries a machine-readable agent policy header pointing at agents.md, the
+    UCP discovery document and the UCP/MCP endpoint, and states that checkout completion
+    requires contemporaneous human approval.
+- path: /sitemap.xml
+  status: 200
+  content_type: application/xml
+  note: >-
+    The sitemap index includes a dedicated sitemap_agentic_discovery.xml listing
+    /agents.md with changefreq weekly.
+other_hosts_probed:
+- host: https://voyage-foods-2021.myshopify.com
+  paths:
+  - {path: /.well-known/agent-card.json, status: 404}
+  - {path: /.well-known/agent.json, status: 404}
+  - {path: /.well-known/security.txt, status: 404}
+- host: https://api.voyagefoods.com
+  status: dns-nxdomain
+- host: https://developer.voyagefoods.com
+  status: dns-nxdomain
+- host: https://docs.voyagefoods.com
+  status: dns-nxdomain
+x-evidence:
+  fetched: '2026-08-05'
+  control_probe:
+    url: https://voyagefoods.com/zzz-control-nonexistent-path
+    status: 404

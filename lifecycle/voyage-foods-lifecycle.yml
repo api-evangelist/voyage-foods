@@ -1,0 +1,63 @@
+generated: '2026-08-05'
+method: probed
+source: >-
+  https://voyagefoods.com/.well-known/ucp and live probes of the Storefront GraphQL version path on
+  2026-08-05. Voyage Foods publishes no versioning policy, deprecation policy, SLA, status page or
+  changelog of its own — everything recorded here is version metadata its platform emits.
+versioning:
+- surface: ucp-mcp
+  scheme: dated
+  current: '2026-04-08'
+  supported:
+  - version: '2026-04-08'
+    profile: https://voyage-foods-2021.myshopify.com/.well-known/ucp/2026-04-08
+  - version: '2026-01-23'
+    profile: https://voyage-foods-2021.myshopify.com/.well-known/ucp/2026-01-23
+  discovery: https://voyagefoods.com/.well-known/ucp
+  negotiation: >-
+    The merchant profile advertises supported_versions as a map of version to version-pinned profile
+    URL; an agent selects a version by fetching the pinned profile.
+  n_supported: 2
+- surface: storefront-graphql
+  scheme: dated-in-path
+  current: '2026-04'
+  path_form: https://voyagefoods.com/api/{version}/graphql.json
+  introspection_field: publicApiVersions
+  unsupported_version_behaviour: >-
+    Probed https://voyagefoods.com/api/1999-01/graphql.json — HTTP 404 with a GraphQL errors body
+    {"message":"Not Found","extensions":{"code":"NOT_FOUND"}}. Unsupported versions fail closed.
+deprecation:
+  policy_url: null
+  policy_published: false
+  sunset_header: false
+  note: >-
+    No RFC 8594 Sunset/Deprecation headers and no deprecation policy page on voyagefoods.com. The
+    Storefront GraphQL schema does carry field-level @deprecated directives with reasons — captured
+    in graphql/voyage-foods-storefront.graphql — which is the only deprecation signal on the surface,
+    and it is a platform artifact rather than a Voyage Foods commitment.
+  deprecated_signal: graphql schema @deprecated directives
+sla:
+  url: null
+  uptime_target: null
+  published: false
+status_page:
+  url: null
+  published: false
+  note: >-
+    No status.voyagefoods.com and no status link on the storefront. The underlying platform publishes
+    status at status.shopify.com, but that is Shopify's page, not a Voyage Foods commitment, so no
+    StatusPage pointer is emitted for this provider.
+changelog:
+  url: null
+  published: false
+  note: >-
+    No dated API changelog. The store's blogs (partnerwithus, media, our-mission,
+    our-favorite-recipes) are marketing content, not release notes.
+deprecated_operations: []
+x-evidence:
+  fetched: '2026-08-05'
+  probes:
+  - {url: 'https://voyagefoods.com/.well-known/ucp', http_status: 200}
+  - {url: 'https://voyagefoods.com/.well-known/ucp/2026-04-08', http_status: 200}
+  - {url: 'https://voyagefoods.com/api/2026-04/graphql.json', http_status: 200}
+  - {url: 'https://voyagefoods.com/api/1999-01/graphql.json', http_status: 404}

@@ -1,0 +1,128 @@
+generated: '2026-08-05'
+method: probed
+source: >-
+  Observed live on 2026-08-05 by issuing malformed and unauthorized requests against
+  https://voyagefoods.com/api/ucp/mcp and https://voyagefoods.com/api/2026-04/graphql.json. Voyage
+  Foods publishes no OpenAPI and no error reference page, so every entry below is an error envelope
+  this pipeline actually received — not one derived from a spec.
+format: json-rpc-2.0 + graphql-errors
+rfc9457: false
+rfc9457_note: >-
+  Neither surface uses application/problem+json. The UCP/MCP surface uses the JSON-RPC 2.0 error
+  object with a nested vendor `data` envelope; the GraphQL surface uses the GraphQL errors array with
+  an `extensions.code` discriminator. Mutations additionally return typed userErrors inside `data`.
+
+envelopes:
+- surface: ucp-mcp
+  content_type: application/json
+  http_status_on_error: 200
+  shape:
+    jsonrpc: '2.0'
+    id: <request id>
+    error:
+      code: <JSON-RPC integer code>
+      message: <short string>
+      data:
+        code: <vendor slug>
+        content: <human-readable detail>
+        continue_url: <URL a human can open to take over>
+  note: >-
+    Errors are returned with HTTP 200 and signalled only in the body — an agent that branches on HTTP
+    status alone will read every one of these as success.
+- surface: storefront-graphql
+  content_type: application/json
+  http_status_on_error: 200 for field errors, 404 for an unknown API version
+  shape:
+    errors:
+    - message: <string>
+      locations: [{line, column}]
+      path: [<segments>]
+      extensions: {code: <slug>, typeName: <type>, fieldName: <field>}
+
+problems:
+- surface: ucp-mcp
+  code: -32001
+  message: UCP discovery failed
+  data_code: invalid_profile_url
+  detail: 'Unable to fetch agent profile: Missing profile uri'
+  cause: >-
+    The request omitted meta["ucp-agent"].profile. Returned for tools/call without meta and also for
+    initialize and for unsupported methods such as resources/list — the discovery gate runs before
+    method dispatch.
+  remediation: >-
+    Publish an agent profile document at a resolvable HTTPS URI and pass it as
+    meta["ucp-agent"].profile on every call.
+  continue_url: https://voyage-foods-2021.myshopify.com/
+  observed: true
+- surface: ucp-mcp
+  code: -32001
+  message: UCP discovery failed
+  data_code: profile_unreachable
+  detail: 'Unable to fetch agent profile: Http error'
+  cause: >-
+    A syntactically valid profile URI was supplied but the server could not fetch it. The store
+    dereferences the agent's profile URI server-side before honouring the call.
+  remediation: Serve the agent profile document at a publicly reachable URL that returns 200.
+  continue_url: https://voyage-foods-2021.myshopify.com/
+  observed: true
+- surface: ucp-mcp
+  code: -32000
+  message: AuthenticationRequired
+  detail: >-
+    'Unauthorized: A valid JWT is required to call <tool>. See
+    https://shopify.dev/docs/agents/get-started/authentication for instructions on generating a token
+    and authenticating your requests.'
+  cause: >-
+    Tool invocation requires a bearer JWT in addition to a resolvable agent profile. Observed when
+    calling an unrecognised tool name; the auth check is reached once the discovery gate is passed or
+    bypassed.
+  remediation: Obtain a token per the Shopify agents authentication guide and send it with the request.
+  docs: https://shopify.dev/docs/agents/get-started/authentication
+  observed: true
+- surface: storefront-graphql
+  extensions_code: undefinedField
+  message: "Field '<name>' doesn't exist on type 'QueryRoot'"
+  http_status: 200
+  cause: The query selected a field not present in the schema for this API version.
+  remediation: Validate against graphql/voyage-foods-storefront.graphql before sending.
+  observed: true
+- surface: storefront-graphql
+  extensions_code: NOT_FOUND
+  message: Not Found
+  http_status: 404
+  cause: The API version segment in the path is not a supported Storefront API version.
+  remediation: >-
+    Use a supported dated version (2026-04 observed live) or read the publicApiVersions query for the
+    current set.
+  observed: true
+- surface: storefront-graphql
+  message: No query string was present
+  http_status: 200
+  cause: The endpoint was called without a GraphQL document (for example with GET and no query param).
+  remediation: POST a JSON body with a `query` field.
+  observed: true
+
+typed_user_errors:
+  note: >-
+    Storefront mutations return domain failures inside `data` as typed userErrors rather than as
+    transport errors — an agent must inspect them even on an otherwise successful response.
+  types_in_schema: [CartUserError, CustomerUserError, UserError, MetafieldDeleteUserError, MetafieldsSetUserError, CartCompletionFailed, CartThrottled, SubmitFailed, SubmitThrottled, SubmitAlreadyAccepted]
+  source: graphql/voyage-foods-storefront.graphql
+
+rate_limiting:
+- surface: ucp-mcp
+  status: 429
+  documented: true
+  guidance: 'The MCP endpoint is rate-limited per IP. Back off on 429 responses.'
+  source: https://voyagefoods.com/llms.txt
+  observed: false
+  note: Documented by the provider; not triggered by this pipeline.
+
+x-evidence:
+  fetched: '2026-08-05'
+  probes:
+  - {url: 'https://voyagefoods.com/api/ucp/mcp', method: POST, case: 'tools/call without meta', http_status: 200, error_code: -32001}
+  - {url: 'https://voyagefoods.com/api/ucp/mcp', method: POST, case: 'tools/call with unreachable profile', http_status: 200, error_code: -32001}
+  - {url: 'https://voyagefoods.com/api/ucp/mcp', method: POST, case: 'tools/call unknown tool', http_status: 200, error_code: -32000}
+  - {url: 'https://voyagefoods.com/api/2026-04/graphql.json', method: POST, case: 'undefined field', http_status: 200}
+  - {url: 'https://voyagefoods.com/api/1999-01/graphql.json', method: POST, case: 'unsupported version', http_status: 404}

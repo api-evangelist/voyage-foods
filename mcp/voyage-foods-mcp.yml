@@ -1,0 +1,127 @@
+generated: '2026-08-05'
+method: searched
+status: published
+source: https://voyagefoods.com/api/ucp/mcp
+docs: https://voyagefoods.com/agents.md
+discovery:
+  advertised_in:
+  - https://voyagefoods.com/llms.txt
+  - https://voyagefoods.com/agents.md
+  - https://voyagefoods.com/robots.txt
+  - https://voyagefoods.com/.well-known/ucp
+server:
+  name: voyage-foods-ucp-shopping
+  transport: http
+  protocol: JSON-RPC 2.0 over HTTP POST
+  url: https://voyagefoods.com/api/ucp/mcp
+  canonical_url: https://voyage-foods-2021.myshopify.com/api/ucp/mcp
+  content_type: application/json
+  accept: application/json, text/event-stream
+  platform: Shopify
+  shop_id: '59465728192'
+protocol:
+  name: Universal Commerce Protocol
+  spec: https://ucp.dev/2026-04-08/specification/overview/
+  service: dev.ucp.shopping
+  version: '2026-04-08'
+  supported_versions:
+  - '2026-04-08'
+  - '2026-01-23'
+  openrpc_schema: https://ucp.dev/2026-04-08/services/shopping/mcp.openrpc.json
+  capabilities:
+  - dev.ucp.shopping.catalog.search
+  - dev.ucp.shopping.catalog.lookup
+  - dev.ucp.shopping.cart
+  - dev.ucp.shopping.checkout
+  - dev.ucp.shopping.fulfillment
+  - dev.ucp.shopping.discount
+  - dev.ucp.shopping.order
+  - dev.shopify.catalog
+  payment_handlers:
+  - {id: gpay, handler: com.google.pay, version: '2026-01-11'}
+  - {id: shopify.card, handler: dev.shopify.card, version: '2026-01-15'}
+  - {id: shop_pay, handler: dev.shopify.shop_pay, version: '2026-04-08'}
+access:
+  tools_list: anonymous
+  note: >-
+    tools/list returns HTTP 200 anonymously with full JSON Schema 2020-12 inputSchemas for
+    all 13 tools; the verbatim response is saved at mcp/voyage-foods-ucp-tools-list.json.
+    Tool INVOCATION is gated on UCP agent-profile discovery — every tool requires
+    meta["ucp-agent"].profile, and an initialize call without one returns JSON-RPC error
+    -32001 "UCP discovery failed" / invalid_profile_url. Payment completion additionally
+    requires contemporaneous human buyer approval.
+  rate_limited: true
+  rate_limit_note: 'Per-IP rate limiting on the MCP endpoint; back off on 429 (stated in llms.txt).'
+tool_count: 13
+tools:
+- name: search_catalog
+  category: catalog
+  description: >-
+    Search for products from the online store, hosted on Shopify, using natural language
+    queries, specific filter criteria, or both. At least one of query or filters must be
+    provided. Results are paginated.
+- name: lookup_catalog
+  category: catalog
+  description: >-
+    Look up multiple products or variants by identifier in a single request. Supports
+    product IDs (gid://shopify/Product/...) and variant IDs (gid://shopify/ProductVariant/...).
+- name: get_product
+  category: catalog
+  description: >-
+    Retrieve complete product detail by identifier — a singular product with a relevant set
+    of variants, exact pricing, and real-time availability, with interactive option
+    selection via selected and preferences parameters.
+- name: create_cart
+  category: cart
+  description: Creates a new cart.
+- name: get_cart
+  category: cart
+  description: Get the cart contents.
+- name: update_cart
+  category: cart
+  description: Perform updates to a cart.
+- name: cancel_cart
+  category: cart
+  description: Cancels a cart.
+- name: create_checkout
+  category: checkout
+  description: >-
+    Creates a checkout. Returns checkout details, including line items, totals, and any
+    applicable discounts or taxes.
+- name: get_checkout
+  category: checkout
+  description: >-
+    Returns details about the checkout, including line items, totals, and any applicable
+    discounts or taxes.
+- name: update_checkout
+  category: checkout
+  description: >-
+    Updates a checkout. Returns checkout details, including line items, totals, and any
+    applicable discounts or taxes.
+- name: complete_checkout
+  category: checkout
+  description: >-
+    Completes a checkout and returns the checkout result, including order ID, Thank You Page
+    URL, or any errors encountered.
+  requires_idempotency_key: true
+  requires_human_approval: true
+- name: cancel_checkout
+  category: checkout
+  description: Cancels a checkout.
+- name: get_order
+  category: order
+  description: Get the details of an order.
+input_schemas:
+  file: voyage-foods-ucp-tools-list.json
+  format: JSON Schema 2020-12
+  note: >-
+    Every tool takes a required meta object carrying meta["ucp-agent"].profile (an agent
+    profile URI). complete_checkout additionally requires meta["idempotency-key"].
+x-evidence:
+  fetched: '2026-08-05'
+  url: https://voyagefoods.com/api/ucp/mcp
+  method: POST
+  body: '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+  http_status: 200
+  content_type: application/json; charset=utf-8
+  tools_returned: 13

@@ -1,0 +1,169 @@
+generated: '2026-08-05'
+method: searched
+source: >-
+  https://voyagefoods.com/agents.md, https://voyagefoods.com/llms.txt and
+  https://voyagefoods.com/robots.txt — the store publishes its own agent access policy in prose, and
+  the operation classifications below are bound to the 13 real tools returned by
+  https://voyagefoods.com/api/ucp/mcp tools/list.
+note: >-
+  Unlike most entries in this catalog, the access contract here is NOT generated from an OpenAPI by
+  derive-agentic-access.py — this provider publishes no OpenAPI. It is read from an agent policy the
+  merchant actually publishes, in three places, and cross-checked against the live tool schemas.
+  Fields marked provider_stated are quoted from that policy; fields marked derived are this
+  pipeline's classification of the tool.
+published_policy:
+  agent_policy_documents:
+  - {url: 'https://voyagefoods.com/agents.md', status: 200, content_type: text/markdown}
+  - {url: 'https://voyagefoods.com/llms.txt', status: 200, content_type: text/markdown}
+  - {url: 'https://voyagefoods.com/robots.txt', status: 200, content_type: text/plain}
+  crawl_posture: >-
+    robots.txt allows all user-agents across product, collection, page, blog, policy, cart and
+    localized HTML. No AI-crawler blocks were observed.
+  agent_identity_required: true
+  agent_identity_mechanism: meta["ucp-agent"].profile — a dereferenceable agent profile URI
+  human_approval_required_for_payment: true
+  provider_statements:
+  - >-
+      "Checkout requires human approval. Agents must not complete payment without explicit buyer
+      consent. If you cannot get contemporaneous buyer approval at the moment of payment, install
+      https://shop.app/SKILL.md and route the purchase through Shop Pay instead."
+  - >-
+      "Checkouts are for humans. Do NOT complete checkout, payment, or order placement automatically
+      — no scripted form fills, browser automation, or end-to-end agent flows that finalize payment
+      without an explicit, contemporaneous human approval step."
+  - >-
+      "Respect rate limits. The MCP endpoint is rate-limited per IP. Back off on 429 responses."
+  - >-
+      "Use buyer context. Pass context.address_country and context.currency for accurate pricing and
+      availability."
+  preferred_channel: >-
+    The store explicitly prefers the UCP/MCP endpoints or the Shop skill over screen-scraping or
+    scripting the storefront: "If your user permits installation, you should prefer the Shop skill
+    over screen-scraping or scripting the storefront directly."
+summary:
+  operations_classified: 13
+  by_action_class: {connected: 5, acting: 8}
+  by_consequence: {read: 5, write: 5, physical: 3}
+  human_in_the_loop_required: 1
+  audit_required: 8
+  agent_identity_required: 13
+operations:
+- operation: search_catalog
+  action_class: connected
+  consequence: read
+  audience: null
+  human_in_the_loop: not-required
+  audit: optional
+  basis: derived
+- operation: lookup_catalog
+  action_class: connected
+  consequence: read
+  audience: null
+  human_in_the_loop: not-required
+  audit: optional
+  basis: derived
+- operation: get_product
+  action_class: connected
+  consequence: read
+  audience: null
+  human_in_the_loop: not-required
+  audit: optional
+  basis: derived
+- operation: get_cart
+  action_class: connected
+  consequence: read
+  audience: null
+  human_in_the_loop: not-required
+  audit: optional
+  basis: derived
+- operation: get_checkout
+  action_class: connected
+  consequence: read
+  audience: null
+  human_in_the_loop: not-required
+  audit: optional
+  basis: derived
+- operation: get_order
+  action_class: connected
+  consequence: read
+  audience: null
+  human_in_the_loop: not-required
+  audit: required
+  basis: derived
+  note: Returns buyer order detail; read-only but personally identifying.
+- operation: create_cart
+  action_class: acting
+  consequence: write
+  audience: null
+  human_in_the_loop: not-required
+  audit: required
+  basis: derived
+- operation: update_cart
+  action_class: acting
+  consequence: write
+  audience: null
+  human_in_the_loop: not-required
+  audit: required
+  basis: derived
+- operation: cancel_cart
+  action_class: acting
+  consequence: write
+  audience: null
+  human_in_the_loop: not-required
+  audit: required
+  basis: derived
+- operation: create_checkout
+  action_class: acting
+  consequence: write
+  audience: null
+  human_in_the_loop: not-required
+  audit: required
+  basis: derived
+- operation: update_checkout
+  action_class: acting
+  consequence: write
+  audience: null
+  human_in_the_loop: not-required
+  audit: required
+  basis: derived
+  note: >-
+    Accepts payment.instruments including credential tokens and billing addresses — treat as
+    handling payment material even though it does not authorize a charge.
+- operation: cancel_checkout
+  action_class: acting
+  consequence: physical
+  audience: null
+  human_in_the_loop: not-required
+  audit: required
+  basis: derived
+  note: Voids a checkout that may already hold buyer payment instruments.
+- operation: complete_checkout
+  action_class: acting
+  consequence: physical
+  audience: null
+  human_in_the_loop: required
+  human_in_the_loop_basis: provider_stated
+  idempotency_key: required
+  idempotency_field: meta["idempotency-key"]
+  audit: required
+  basis: derived
+  note: >-
+    The only operation the merchant's own published policy gates on contemporaneous human approval.
+    It moves money and creates an order. The store names an alternative route (the Shop skill via
+    Shop Pay) for agents that cannot obtain approval in the moment.
+escalation:
+  continue_url: >-
+    Every UCP error envelope carries data.continue_url (observed:
+    https://voyage-foods-2021.myshopify.com/), a human-resumable URL the agent can hand to the buyer
+    when it cannot proceed. This is a real, observed handoff path rather than a documented one.
+gaps:
+  - No published token TTL, scope-per-operation, or proof-of-possession requirement for the agent JWT.
+  - No published audit or retention commitment; audit values above are this pipeline's recommendation.
+  - No agent-profile schema is published, so the shape of a conforming meta["ucp-agent"].profile document is unstated.
+x-evidence:
+  fetched: '2026-08-05'
+  probes:
+  - {url: 'https://voyagefoods.com/agents.md', http_status: 200}
+  - {url: 'https://voyagefoods.com/llms.txt', http_status: 200}
+  - {url: 'https://voyagefoods.com/robots.txt', http_status: 200}
+  - {url: 'https://voyagefoods.com/api/ucp/mcp', http_status: 200, note: 'tools/list returned 13 tools'}

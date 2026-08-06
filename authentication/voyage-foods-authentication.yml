@@ -1,0 +1,100 @@
+generated: '2026-08-05'
+method: searched
+source: https://voyagefoods.com/.well-known/openid-configuration
+docs: https://voyagefoods.com/agents.md
+note: >-
+  Voyage Foods publishes no OpenAPI, so this profile is not derived from securitySchemes. It is
+  assembled from three surfaces probed live on 2026-08-05: the OIDC / RFC 8414 discovery documents
+  served at voyagefoods.com/.well-known/, the anonymous access posture of the Storefront GraphQL
+  endpoint and the UCP/MCP endpoint, and the agent-access rules the store publishes in agents.md,
+  llms.txt and robots.txt.
+summary:
+  types: [openIdConnect, oauth2, http, none, agent-profile]
+  oauth2_flows: [authorizationCode, refreshToken, 'urn:ietf:params:oauth:grant-type:jwt-bearer']
+  api_key_in: []
+  http_schemes: [bearer]
+  anonymous_surfaces: 3
+  pkce_required_methods: [S256]
+schemes:
+- name: ShopifyCustomerAccountsOIDC
+  type: openIdConnect
+  openIdConnectUrl: https://voyagefoods.com/.well-known/openid-configuration
+  issuer: https://shopify.com/authentication/59465728192
+  authorization_endpoint: https://shopify.com/authentication/59465728192/oauth/authorize
+  token_endpoint: https://shopify.com/authentication/59465728192/oauth/token
+  end_session_endpoint: https://shopify.com/authentication/59465728192/logout
+  jwks_uri: https://shopify.com/authentication/59465728192/.well-known/jwks.json
+  response_types_supported: [code]
+  grant_types_supported: [authorization_code, refresh_token, 'urn:ietf:params:oauth:grant-type:jwt-bearer']
+  token_endpoint_auth_methods_supported: [client_secret_basic]
+  code_challenge_methods_supported: [S256]
+  id_token_signing_alg_values_supported: [RS256]
+  subject_types_supported: [public]
+  claims_supported: [iss, sub, aud, exp, iat, nonce, sid, email, email_verified]
+  scopes_supported: [openid, email, 'customer-account-api:full', 'customer-account-mcp-api:full']
+  applies_to: Customer account sign-in and the Shopify Customer Account API / Customer Account MCP API
+  sources: [well-known/voyage-foods-openid-configuration.json]
+- name: ShopifyOAuthAuthorizationServer
+  type: oauth2
+  spec: RFC 8414
+  metadata_url: https://voyagefoods.com/.well-known/oauth-authorization-server
+  note: >-
+    The RFC 8414 authorization-server metadata document is byte-identical to the OIDC discovery
+    document above; the same issuer serves both.
+  sources: [well-known/voyage-foods-oauth-authorization-server.json]
+- name: StorefrontGraphQLAnonymous
+  type: none
+  applies_to: https://voyagefoods.com/api/2026-04/graphql.json
+  observed: >-
+    Anonymous POST returns HTTP 200 for both a trivial query and a full introspection query — no
+    X-Shopify-Storefront-Access-Token was supplied. Public storefront reads (products, collections,
+    search, cart) are unauthenticated; the `customer` query requires a customer access token obtained
+    via the customerAccessTokenCreate mutation or the OIDC flow above.
+  customer_token_mutations: [customerAccessTokenCreate, customerAccessTokenCreateWithMultipass, customerAccessTokenRenew, customerAccessTokenDelete]
+  sources: [graphql/voyage-foods-storefront.graphql]
+- name: UCPAgentProfile
+  type: agent-profile
+  applies_to: https://voyagefoods.com/api/ucp/mcp
+  observed: >-
+    tools/list is answered anonymously (HTTP 200, 13 tools). Tool INVOCATION is not anonymous, and is
+    gated twice. First gate: every tool's inputSchema requires meta["ucp-agent"].profile, a URI
+    identifying the calling agent, which the server DEREFERENCES — omitting it returns JSON-RPC
+    -32001 / invalid_profile_url, and supplying an unreachable URI returns -32001 /
+    profile_unreachable. This is agent identity, not a bearer credential.
+  required_field: meta.ucp-agent.profile
+  spec: https://ucp.dev/2026-04-08/specification/overview/
+  sources: [mcp/voyage-foods-ucp-tools-list.json]
+- name: ShopifyAgentJWT
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  applies_to: https://voyagefoods.com/api/ucp/mcp
+  observed: >-
+    Second gate on tool invocation. A tools/call reached past the discovery check returns JSON-RPC
+    -32000 "AuthenticationRequired" with the detail "Unauthorized: A valid JWT is required to call
+    <tool>. See https://shopify.dev/docs/agents/get-started/authentication for instructions on
+    generating a token and authenticating your requests." Token issuance is a Shopify platform flow,
+    not a Voyage Foods one; the storefront publishes no developer signup of its own.
+  docs: https://shopify.dev/docs/agents/get-started/authentication
+  sources: [errors/voyage-foods-problem-types.yml]
+- name: StorefrontJSONAnonymous
+  type: none
+  applies_to: https://voyagefoods.com/products.json
+  observed: Read-only product and collection JSON endpoints return HTTP 200 with no credential.
+  sources: [llms/voyage-foods-agents.md]
+payment_authorization:
+  human_approval_required: true
+  statement: >-
+    "Checkout requires human approval. Agents must not complete payment without explicit buyer
+    consent." — published verbatim in llms.txt and agents.md, and restated in robots.txt.
+  handlers:
+  - {id: gpay, handler: com.google.pay}
+  - {id: shopify.card, handler: dev.shopify.card}
+  - {id: shop_pay, handler: dev.shopify.shop_pay}
+x-evidence:
+  fetched: '2026-08-05'
+  probes:
+  - {url: 'https://voyagefoods.com/.well-known/openid-configuration', http_status: 200, content_type: application/json}
+  - {url: 'https://voyagefoods.com/.well-known/oauth-authorization-server', http_status: 200, content_type: application/json}
+  - {url: 'https://voyagefoods.com/api/2026-04/graphql.json', http_status: 200, note: anonymous introspection succeeded}
+  - {url: 'https://voyagefoods.com/api/ucp/mcp', http_status: 200, note: anonymous tools/list succeeded; initialize without an agent profile returned JSON-RPC -32001}

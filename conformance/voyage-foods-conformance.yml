@@ -1,0 +1,142 @@
+generated: '2026-08-05'
+method: derived
+source: >-
+  Derived from artifacts probed live on 2026-08-05: well-known/voyage-foods-ucp.json,
+  well-known/voyage-foods-openid-configuration.json, mcp/voyage-foods-ucp-tools-list.json,
+  graphql/voyage-foods-storefront.graphql, errors/voyage-foods-problem-types.yml and
+  security/voyage-foods-domain-security.yml. Voyage Foods publishes no compliance or certification
+  page of its own, so no Compliance pointer is emitted.
+standards:
+- id: ucp-2026-04-08
+  name: Universal Commerce Protocol
+  conforms: true
+  evidence: >-
+    /.well-known/ucp returns a 200 merchant profile declaring ucp.version 2026-04-08, the
+    dev.ucp.shopping service over mcp transport, and eight capabilities (catalog.search,
+    catalog.lookup, cart, checkout, fulfillment, discount, order, dev.shopify.catalog).
+  spec: https://ucp.dev/2026-04-08/specification/overview/
+- id: mcp
+  name: Model Context Protocol
+  conforms: true
+  evidence: >-
+    POST tools/list to /api/ucp/mcp returns a JSON-RPC 2.0 result with 13 tools, each carrying a
+    name, description and JSON Schema inputSchema.
+- id: json-rpc-2.0
+  name: JSON-RPC 2.0
+  conforms: true
+  evidence: All MCP responses carry jsonrpc "2.0", the request id, and either result or a structured error object.
+- id: json-schema-2020-12
+  name: JSON Schema draft 2020-12
+  conforms: true
+  evidence: Every tool inputSchema declares $schema https://json-schema.org/draft/2020-12/schema.
+- id: graphql
+  name: GraphQL
+  conforms: true
+  evidence: >-
+    /api/2026-04/graphql.json answers a full introspection query anonymously with 416 types, 35
+    QueryRoot fields and 41 Mutation fields.
+- id: relay-cursor-connections
+  name: GraphQL Cursor Connections (Relay)
+  conforms: true
+  evidence: List fields expose edges/node/cursor and pageInfo with hasNextPage/hasPreviousPage/startCursor/endCursor.
+- id: oidc-discovery
+  name: OpenID Connect Discovery 1.0
+  conforms: true
+  evidence: >-
+    /.well-known/openid-configuration returns 200 with issuer, authorization_endpoint,
+    token_endpoint, jwks_uri, response_types_supported, subject_types_supported and
+    id_token_signing_alg_values_supported.
+- id: oauth2
+  name: OAuth 2.0
+  conforms: true
+  evidence: authorization_code and refresh_token grants advertised on the Shopify Customer Accounts issuer.
+- id: rfc8414
+  name: OAuth 2.0 Authorization Server Metadata
+  conforms: true
+  evidence: /.well-known/oauth-authorization-server returns 200 with authorization server metadata.
+- id: rfc7636
+  name: PKCE
+  conforms: true
+  evidence: code_challenge_methods_supported is ["S256"].
+- id: rfc7523
+  name: JWT Bearer grant
+  conforms: true
+  evidence: grant_types_supported includes urn:ietf:params:oauth:grant-type:jwt-bearer.
+- id: llms-txt
+  name: llms.txt
+  conforms: true
+  evidence: /llms.txt returns 200 text/markdown with an H1, prose and structured link sections.
+- id: agents-md
+  name: agents.md
+  conforms: true
+  evidence: >-
+    /agents.md returns 200 text/markdown and is listed in a dedicated sitemap_agentic_discovery.xml
+    with changefreq weekly.
+- id: rfc9309
+  name: Robots Exclusion Protocol
+  conforms: true
+  evidence: /robots.txt returns 200 and carries an explicit agent-commerce policy header block.
+- id: sitemaps-0.9
+  name: Sitemaps 0.9
+  conforms: true
+  evidence: /sitemap.xml returns a valid sitemapindex over five child sitemaps.
+- id: idempotency
+  name: Idempotent request replay
+  conforms: partial
+  evidence: >-
+    complete_checkout requires meta["idempotency-key"], but it is the only operation with an
+    idempotency contract and no retention or replay window is published.
+  detail: conventions/voyage-foods-conventions.yml
+- id: rfc9457
+  name: Problem Details for HTTP APIs
+  conforms: false
+  evidence: >-
+    No application/problem+json anywhere. MCP errors use the JSON-RPC error object with a vendor data
+    envelope; GraphQL uses the errors array with extensions.code.
+- id: openapi
+  name: OpenAPI
+  conforms: false
+  evidence: >-
+    No OpenAPI on any probed host — /openapi.json, /swagger.json, /api-docs and /docs all 404 on
+    voyagefoods.com, and api./developer./docs. subdomains do not resolve.
+- id: asyncapi
+  name: AsyncAPI
+  conforms: false
+  evidence: >-
+    No event, streaming or webhook surface is published on the storefront. Not applicable rather than
+    a failing — this provider has no event surface to describe.
+- id: a2a
+  name: A2A Agent Card
+  conforms: false
+  evidence: >-
+    /.well-known/agent-card.json and /.well-known/agent.json return 404 on both voyagefoods.com and
+    voyage-foods-2021.myshopify.com. A control probe of a nonsense path also returned 404, so these
+    are true misses.
+- id: rfc9116
+  name: security.txt
+  conforms: false
+  evidence: /.well-known/security.txt returns 404.
+- id: rfc9727
+  name: API Catalog (/.well-known/api-catalog)
+  conforms: false
+  evidence: /.well-known/api-catalog returns 404.
+- id: hsts
+  name: HTTP Strict Transport Security
+  conforms: true
+  evidence: 'voyagefoods.com serves HSTS with max-age 7889238 over TLSv1.3.'
+  detail: security/voyage-foods-domain-security.yml
+- id: dnssec
+  name: DNSSEC
+  conforms: true
+  evidence: voyagefoods.com is DNSSEC-signed.
+- id: dmarc
+  name: DMARC
+  conforms: partial
+  evidence: 'DMARC record present with policy p=none (monitor only); SPF present; no CAA records.'
+compliance_program:
+  published: false
+  certifications: []
+  note: >-
+    No trust center, no SOC 2 / ISO 27001 / PCI claim and no compliance page on voyagefoods.com.
+    probe-security-programs.py returned vdp=none trust=none. The storefront's payment handling is
+    delegated to Shopify, whose compliance posture is not a Voyage Foods publication.

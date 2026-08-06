@@ -1,0 +1,179 @@
+generated: '2026-08-05'
+method: derived
+source: >-
+  Derived by aligning the live UCP/MCP tool list (mcp/voyage-foods-ucp-tools-list.json, 13 tools
+  captured anonymously from https://voyagefoods.com/api/ucp/mcp) with the live Shopify Storefront
+  GraphQL schema captured by anonymous introspection at https://voyagefoods.com/api/2026-04/graphql.json
+  (graphql/voyage-foods-storefront.graphql — 35 QueryRoot fields, 41 Mutation fields, 416 types).
+purpose: >-
+  Voyage Foods publishes NO OpenAPI. Its two machine-readable surfaces are the UCP/MCP tool set and
+  the Storefront GraphQL schema, and they are overlapping-but-non-identical projections of one
+  commerce core. This crosswalk binds each MCP tool to the GraphQL field(s) that back the same
+  capability so the tool inherits a real, verifiable contract, and records the fields on each side
+  that have no counterpart on the other.
+surfaces:
+  openapi: null                                        # no OpenAPI published on any host — see x-discovery below
+  graphql: https://voyagefoods.com/api/2026-04/graphql.json   # introspection OPEN (anonymous, 200)
+  graphql_sdl: graphql/voyage-foods-storefront.graphql
+  mcp: https://voyagefoods.com/api/ucp/mcp             # tools/list OPEN (anonymous, 200); INVOCATION gated on UCP agent profile
+  mcp_tools: mcp/voyage-foods-ucp-tools-list.json
+binding_note: >-
+  binding is "graphql" throughout because there is no REST/OpenAPI layer to bind to. The mapping is
+  capability-level, not a proof of server-side implementation: UCP is a Shopify-managed abstraction
+  over the same commerce core the Storefront API serves, so a tool may fan out to several GraphQL
+  fields or to admin-side machinery with no Storefront equivalent. Confidence is set accordingly.
+crosswalk:
+- tool: search_catalog
+  category: catalog
+  graphql: [search, predictiveSearch, products]
+  binding: graphql
+  confidence: high
+  note: >-
+    Natural-language and filtered product search; the Storefront root exposes both the paginated
+    `search` connection and `predictiveSearch`, plus a filterable `products` connection.
+- tool: lookup_catalog
+  category: catalog
+  graphql: [nodes, products]
+  binding: graphql
+  confidence: high
+  note: >-
+    Batch resolution of gid://shopify/Product and gid://shopify/ProductVariant identifiers maps to
+    the Relay `nodes` field, which resolves an array of global IDs.
+- tool: get_product
+  category: catalog
+  graphql: [product, productByHandle, node]
+  binding: graphql
+  confidence: high
+  note: Single-product detail with variant/option narrowing and real-time availability.
+- tool: create_cart
+  category: cart
+  graphql: [cartCreate]
+  binding: graphql
+  confidence: high
+- tool: get_cart
+  category: cart
+  graphql: [cart]
+  binding: graphql
+  confidence: high
+- tool: update_cart
+  category: cart
+  graphql: [cartLinesAdd, cartLinesUpdate, cartLinesRemove, cartBuyerIdentityUpdate, cartDiscountCodesUpdate, cartDeliveryAddressesAdd, cartSelectedDeliveryOptionsUpdate]
+  binding: graphql
+  confidence: medium
+  note: >-
+    One UCP tool fans out to the whole Relay cart-mutation family; the MCP call carries line_items,
+    buyer, context, fulfillment and discounts in a single payload and the server routes internally.
+- tool: cancel_cart
+  category: cart
+  graphql: [cartRemovePersonalData]
+  binding: graphql
+  confidence: low
+  note: >-
+    No Storefront mutation deletes a cart outright. cartRemovePersonalData is the nearest published
+    teardown operation; cancellation is likely handled server-side by the UCP layer.
+- tool: create_checkout
+  category: checkout
+  graphql: [cartCreate, cartPrepareForCompletion]
+  binding: graphql
+  confidence: medium
+  note: >-
+    UCP models checkout as a first-class resource; the Storefront API models it as a cart advanced
+    toward completion. The create_checkout payload also accepts a cart_id to convert an existing cart.
+- tool: get_checkout
+  category: checkout
+  graphql: [cart, cartCompletionAttempt]
+  binding: graphql
+  confidence: medium
+- tool: update_checkout
+  category: checkout
+  graphql: [cartLinesUpdate, cartBuyerIdentityUpdate, cartDeliveryAddressesUpdate, cartSelectedDeliveryOptionsUpdate, cartDiscountCodesUpdate, cartPaymentUpdate]
+  binding: graphql
+  confidence: medium
+  note: Fans out the same way update_cart does, plus payment-instrument selection.
+- tool: complete_checkout
+  category: checkout
+  graphql: [cartSubmitForCompletion, cartCompletionAttempt]
+  binding: graphql
+  confidence: medium
+  note: >-
+    The only tool with a required idempotency key (meta["idempotency-key"]). Requires contemporaneous
+    human buyer approval per the store's published agent policy.
+- tool: cancel_checkout
+  category: checkout
+  graphql: []
+  binding: none
+  confidence: low
+  note: No Storefront GraphQL counterpart; checkout cancellation exists only in the UCP layer.
+mcp_only:
+- tool: cancel_checkout
+  reason: >-
+    UCP models an explicit cancellable checkout resource. The Storefront GraphQL API has no
+    checkout-cancel mutation — a cart is simply abandoned.
+- tool: get_order
+  reason: >-
+    Order retrieval by id is a UCP capability (dev.ucp.shopping.order). The unauthenticated Storefront
+    root exposes no `order` query; orders are reachable only through an authenticated `customer` /
+    Customer Account API context.
+- tool: cancel_cart
+  reason: >-
+    No public Storefront mutation cancels/deletes a cart; only cartRemovePersonalData exists, so the
+    cancel semantics are UCP-layer only.
+graphql_only:
+- capability: content
+  fields: [article, articles, blog, blogByHandle, blogs, page, pageByHandle, pages, menu, metaobject, metaobjects]
+  reason: Blog, page, navigation-menu and metaobject content has no UCP shopping tool.
+- capability: merchandising
+  fields: [collection, collectionByHandle, collections, productRecommendations, productTags, productTypes]
+  reason: >-
+    Collection browsing, recommendation and facet vocabulary are queryable in GraphQL but the UCP tool
+    set only exposes search/lookup/detail.
+- capability: customer_identity
+  fields: [customer, customerAccessTokenCreate, customerAccessTokenCreateWithMultipass, customerAccessTokenDelete, customerAccessTokenRenew, customerActivate, customerActivateByUrl, customerCreate, customerRecover, customerReset, customerResetByUrl, customerUpdate, customerAddressCreate, customerAddressUpdate, customerAddressDelete, customerDefaultAddressUpdate]
+  reason: >-
+    Customer account creation, login-token lifecycle and address book are GraphQL-only; UCP carries
+    buyer identity as inline payload fields rather than a persisted account.
+- capability: store_metadata
+  fields: [shop, localization, locations, paymentSettings, publicApiVersions, sitemap, urlRedirects, shopPayInstallmentsPricing]
+  reason: Shop configuration, market/localization and API-version metadata have no UCP tool.
+- capability: cart_extras
+  fields: [cartClone, cartAttributesUpdate, cartNoteUpdate, cartMetafieldsSet, cartMetafieldDelete, cartGiftCardCodesAdd, cartGiftCardCodesRemove, cartGiftCardCodesUpdate, cartBillingAddressUpdate, cartDeliveryAddressesRemove, cartDeliveryAddressesReplace]
+  reason: >-
+    Cart notes, attributes, metafields and gift-card codes are exposed in GraphQL but absent from the
+    UCP tool payloads (discount codes are present; gift cards are not).
+- capability: shop_pay
+  fields: [shopPayPaymentRequestSessionCreate, shopPayPaymentRequestSessionSubmit]
+  reason: >-
+    Shop Pay request sessions are a GraphQL mutation pair; in UCP the same capability appears as the
+    dev.shopify.shop_pay payment handler in /.well-known/ucp rather than as a tool.
+rest_only: []
+coverage:
+  mcp_tools_total: 13
+  mcp_tools_bound_to_graphql: 12
+  mcp_tools_unbound: 1
+  mcp_only_capabilities: 3
+  graphql_query_fields_total: 35
+  graphql_mutation_fields_total: 41
+  graphql_fields_with_a_tool: 20
+  graphql_only_capability_groups: 6
+  rest_operations_total: 0
+x-discovery:
+  openapi_probed:
+  - {url: 'https://voyagefoods.com/openapi.json', status: 404}
+  - {url: 'https://voyagefoods.com/swagger.json', status: 404}
+  - {url: 'https://voyagefoods.com/api-docs', status: 404}
+  - {url: 'https://voyagefoods.com/docs', status: 404}
+  - {url: 'https://api.voyagefoods.com/', status: dns-nxdomain}
+  - {url: 'https://developer.voyagefoods.com/', status: dns-nxdomain}
+  - {url: 'https://docs.voyagefoods.com/', status: dns-nxdomain}
+x-evidence:
+  fetched: '2026-08-05'
+  graphql_introspection:
+    url: https://voyagefoods.com/api/2026-04/graphql.json
+    http_status: 200
+    gated: false
+    types_returned: 416
+  mcp_tools_list:
+    url: https://voyagefoods.com/api/ucp/mcp
+    http_status: 200
+    gated: false
+    tools_returned: 13
