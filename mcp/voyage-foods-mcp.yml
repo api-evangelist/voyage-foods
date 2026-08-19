@@ -38,39 +38,40 @@ protocol:
   - dev.ucp.shopping.order
   - dev.shopify.catalog
   payment_handlers:
-  - {id: gpay, handler: com.google.pay, version: '2026-01-11'}
-  - {id: shopify.card, handler: dev.shopify.card, version: '2026-01-15'}
-  - {id: shop_pay, handler: dev.shopify.shop_pay, version: '2026-04-08'}
+  - id: gpay
+    handler: com.google.pay
+    version: '2026-01-11'
+  - id: shopify.card
+    handler: dev.shopify.card
+    version: '2026-01-15'
+  - id: shop_pay
+    handler: dev.shopify.shop_pay
+    version: '2026-04-08'
 access:
   tools_list: anonymous
-  note: >-
-    tools/list returns HTTP 200 anonymously with full JSON Schema 2020-12 inputSchemas for
-    all 13 tools; the verbatim response is saved at mcp/voyage-foods-ucp-tools-list.json.
-    Tool INVOCATION is gated on UCP agent-profile discovery — every tool requires
-    meta["ucp-agent"].profile, and an initialize call without one returns JSON-RPC error
-    -32001 "UCP discovery failed" / invalid_profile_url. Payment completion additionally
-    requires contemporaneous human buyer approval.
+  note: tools/list returns HTTP 200 anonymously with full JSON Schema 2020-12 inputSchemas for all 13
+    tools; the verbatim response is saved at mcp/voyage-foods-ucp-tools-list.json. Tool INVOCATION is
+    gated on UCP agent-profile discovery — every tool requires meta["ucp-agent"].profile, and an initialize
+    call without one returns JSON-RPC error -32001 "UCP discovery failed" / invalid_profile_url. Payment
+    completion additionally requires contemporaneous human buyer approval.
   rate_limited: true
-  rate_limit_note: 'Per-IP rate limiting on the MCP endpoint; back off on 429 (stated in llms.txt).'
+  rate_limit_note: Per-IP rate limiting on the MCP endpoint; back off on 429 (stated in llms.txt).
 tool_count: 13
 tools:
 - name: search_catalog
   category: catalog
-  description: >-
-    Search for products from the online store, hosted on Shopify, using natural language
-    queries, specific filter criteria, or both. At least one of query or filters must be
-    provided. Results are paginated.
+  description: Search for products from the online store, hosted on Shopify, using natural language queries,
+    specific filter criteria, or both. At least one of query or filters must be provided. Results are
+    paginated.
 - name: lookup_catalog
   category: catalog
-  description: >-
-    Look up multiple products or variants by identifier in a single request. Supports
-    product IDs (gid://shopify/Product/...) and variant IDs (gid://shopify/ProductVariant/...).
+  description: Look up multiple products or variants by identifier in a single request. Supports product
+    IDs (gid://shopify/Product/...) and variant IDs (gid://shopify/ProductVariant/...).
 - name: get_product
   category: catalog
-  description: >-
-    Retrieve complete product detail by identifier — a singular product with a relevant set
-    of variants, exact pricing, and real-time availability, with interactive option
-    selection via selected and preferences parameters.
+  description: Retrieve complete product detail by identifier — a singular product with a relevant set
+    of variants, exact pricing, and real-time availability, with interactive option selection via selected
+    and preferences parameters.
 - name: create_cart
   category: cart
   description: Creates a new cart.
@@ -85,23 +86,19 @@ tools:
   description: Cancels a cart.
 - name: create_checkout
   category: checkout
-  description: >-
-    Creates a checkout. Returns checkout details, including line items, totals, and any
-    applicable discounts or taxes.
+  description: Creates a checkout. Returns checkout details, including line items, totals, and any applicable
+    discounts or taxes.
 - name: get_checkout
   category: checkout
-  description: >-
-    Returns details about the checkout, including line items, totals, and any applicable
-    discounts or taxes.
+  description: Returns details about the checkout, including line items, totals, and any applicable discounts
+    or taxes.
 - name: update_checkout
   category: checkout
-  description: >-
-    Updates a checkout. Returns checkout details, including line items, totals, and any
-    applicable discounts or taxes.
+  description: Updates a checkout. Returns checkout details, including line items, totals, and any applicable
+    discounts or taxes.
 - name: complete_checkout
   category: checkout
-  description: >-
-    Completes a checkout and returns the checkout result, including order ID, Thank You Page
+  description: Completes a checkout and returns the checkout result, including order ID, Thank You Page
     URL, or any errors encountered.
   requires_idempotency_key: true
   requires_human_approval: true
@@ -114,9 +111,8 @@ tools:
 input_schemas:
   file: voyage-foods-ucp-tools-list.json
   format: JSON Schema 2020-12
-  note: >-
-    Every tool takes a required meta object carrying meta["ucp-agent"].profile (an agent
-    profile URI). complete_checkout additionally requires meta["idempotency-key"].
+  note: Every tool takes a required meta object carrying meta["ucp-agent"].profile (an agent profile URI).
+    complete_checkout additionally requires meta["idempotency-key"].
 x-evidence:
   fetched: '2026-08-05'
   url: https://voyagefoods.com/api/ucp/mcp
@@ -125,3 +121,11 @@ x-evidence:
   http_status: 200
   content_type: application/json; charset=utf-8
   tools_returned: 13
+deployment:
+  mode: remote
+  endpoint: https://voyagefoods.com/api/ucp/mcp
+  verified: probed
+  probe: live
+  tools: 13
+  checked: '2026-08-12'
+  source: catalog MCP census
