@@ -21,6 +21,17 @@ tags:
 - Company
 - Food and Beverage
 - Consumer Packaged Goods
+- E-Commerce
+- Agentic Commerce
+- Universal Commerce Protocol
+- MCP
+- GraphQL
+- Shopify
+- Food Technology
+tags_raw:
+- Company
+- Food and Beverage
+- Consumer Packaged Goods
 - Ecommerce
 - Agentic Commerce
 - Universal Commerce Protocol
@@ -64,6 +75,12 @@ apis:
   baseURL: https://voyagefoods.com/api/2026-04/graphql.json
   tags:
   - GraphQL
+  - E-Commerce
+  - Storefront
+  - Cart
+  - Catalog
+  tags_raw:
+  - GraphQL
   - Ecommerce
   - Storefront
   - Cart
@@ -83,6 +100,12 @@ apis:
   humanURL: https://voyagefoods.com/agents.md
   baseURL: https://voyagefoods.com/products.json
   tags:
+  - E-Commerce
+  - Catalog
+  - Product
+  - JSON
+  - Read Only
+  tags_raw:
   - Ecommerce
   - Catalog
   - Products
