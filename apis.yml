@@ -10,6 +10,17 @@ description: 'Voyage Foods is an Oakland, California food-technology company tha
   an anonymously introspectable Shopify Storefront GraphQL API, read-only product and
   collection JSON endpoints, and an agents.md / llms.txt pair stating the store''s agent
   access policy.'
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 image: https://voyagefoods.com/cdn/shop/files/ComboTabletop_0035_1_5.jpg?v=1697240864
 url: https://raw.githubusercontent.com/api-evangelist/voyage-foods/refs/heads/main/apis.yml
 x-type: company
