@@ -1,15 +1,13 @@
 aid: voyage-foods
 name: Voyage Foods
-description: 'Voyage Foods is an Oakland, California food-technology company that reengineers
-  supply-chain-constrained foods from widely available inputs — cocoa-free chocolate,
-  bean-free coffee, and peanut-free and hazelnut-free spreads built from seeds, grape seed
-  and grains — sold direct to consumers and to CPG manufacturers as bulk ingredient. Its
-  public API surface is its commerce surface: the voyagefoods.com storefront publishes a
-  Universal Commerce Protocol (UCP) merchant profile at /.well-known/ucp, a live agent-facing
-  MCP endpoint at /api/ucp/mcp exposing thirteen catalog, cart, checkout and order tools,
-  an anonymously introspectable Shopify Storefront GraphQL API, read-only product and
-  collection JSON endpoints, and an agents.md / llms.txt pair stating the store''s agent
-  access policy.'
+description: 'Voyage Foods is an Oakland, California food-technology company that reengineers supply-chain-constrained
+  foods from widely available inputs — cocoa-free chocolate, bean-free coffee, and peanut-free and hazelnut-free
+  spreads built from seeds, grape seed and grains — sold direct to consumers and to CPG manufacturers
+  as bulk ingredient. Its public API surface is its commerce surface: the voyagefoods.com storefront publishes
+  a Universal Commerce Protocol (UCP) merchant profile at /.well-known/ucp, a live agent-facing MCP endpoint
+  at /api/ucp/mcp exposing thirteen catalog, cart, checkout and order tools, an anonymously introspectable
+  Shopify Storefront GraphQL API, read-only product and collection JSON endpoints, and an agents.md /
+  llms.txt pair stating the store''s agent access policy.'
 deliveryModel:
   model: saas
   open_source: false
@@ -65,14 +63,13 @@ tags_raw:
 - Shopify
 - Food Technology
 apis:
-- aid: voyage-foods-ucp-commerce-mcp
+- aid: voyage-foods:voyage-foods-ucp-commerce-mcp
   name: Voyage Foods UCP Commerce MCP API
-  description: 'The Voyage Foods storefront implements the Universal Commerce Protocol (UCP)
-    for agent-driven commerce over MCP. A JSON-RPC 2.0 endpoint at /api/ucp/mcp answers
-    tools/list anonymously with thirteen tools spanning catalog search and lookup, cart
-    lifecycle, checkout lifecycle and order retrieval, each carrying a full JSON Schema
-    2020-12 inputSchema. Payment completion requires contemporaneous human buyer approval
-    and complete_checkout requires an idempotency key.'
+  description: The Voyage Foods storefront implements the Universal Commerce Protocol (UCP) for agent-driven
+    commerce over MCP. A JSON-RPC 2.0 endpoint at /api/ucp/mcp answers tools/list anonymously with thirteen
+    tools spanning catalog search and lookup, cart lifecycle, checkout lifecycle and order retrieval,
+    each carrying a full JSON Schema 2020-12 inputSchema. Payment completion requires contemporaneous
+    human buyer approval and complete_checkout requires an idempotency key.
   humanURL: https://voyagefoods.com/agents.md
   baseURL: https://voyagefoods.com/api/ucp/mcp
   tags:
@@ -88,14 +85,13 @@ apis:
     url: mcp/voyage-foods-tool-crosswalk.yml
   - type: Documentation
     url: https://voyagefoods.com/agents.md
-- aid: voyage-foods-storefront-graphql
+- aid: voyage-foods:voyage-foods-storefront-graphql
   name: Voyage Foods Storefront GraphQL API
-  description: 'The Shopify Storefront GraphQL API as deployed on the voyagefoods.com host
-    at /api/2026-04/graphql.json. Anonymous introspection is open and returns a 416-type
-    schema with 35 QueryRoot fields (products, collections, search, predictiveSearch, cart,
-    blog/article, menu, shop, localization) and 41 Mutation fields covering the full
-    Relay-style cart lifecycle, discount and gift-card codes, delivery addresses, Shop Pay
-    payment-request sessions and customer access tokens.'
+  description: The Shopify Storefront GraphQL API as deployed on the voyagefoods.com host at /api/2026-04/graphql.json.
+    Anonymous introspection is open and returns a 416-type schema with 35 QueryRoot fields (products,
+    collections, search, predictiveSearch, cart, blog/article, menu, shop, localization) and 41 Mutation
+    fields covering the full Relay-style cart lifecycle, discount and gift-card codes, delivery addresses,
+    Shop Pay payment-request sessions and customer access tokens.
   humanURL: https://shopify.dev/docs/api/storefront
   baseURL: https://voyagefoods.com/api/2026-04/graphql.json
   tags:
@@ -115,13 +111,12 @@ apis:
     url: graphql/voyage-foods-storefront.graphql
   - type: Documentation
     url: https://shopify.dev/docs/api/storefront
-- aid: voyage-foods-storefront-json
+- aid: voyage-foods:voyage-foods-storefront-json
   name: Voyage Foods Storefront Product JSON API
-  description: 'The read-only, unauthenticated product and collection JSON endpoints the
-    store documents for agents in agents.md — /products.json, /products/{handle}.json,
-    /collections/{handle}/products.json and /search?q={query}&type=product — returning
-    product, variant, price, weight, availability and image records for the Voyage Foods
-    sample and bulk catalog.'
+  description: The read-only, unauthenticated product and collection JSON endpoints the store documents
+    for agents in agents.md — /products.json, /products/{handle}.json, /collections/{handle}/products.json
+    and /search?q={query}&type=product — returning product, variant, price, weight, availability and image
+    records for the Voyage Foods sample and bulk catalog.
   humanURL: https://voyagefoods.com/agents.md
   baseURL: https://voyagefoods.com/products.json
   tags:
