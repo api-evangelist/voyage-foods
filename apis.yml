@@ -85,6 +85,9 @@ apis:
     url: mcp/voyage-foods-tool-crosswalk.yml
   - type: Documentation
     url: https://voyagefoods.com/agents.md
+  x-surface: platform-generated
+  x-platform: shopify
+  x-platform-surface: ucp
 - aid: voyage-foods:voyage-foods-storefront-graphql
   name: Voyage Foods Storefront GraphQL API
   description: The Shopify Storefront GraphQL API as deployed on the voyagefoods.com host at /api/2026-04/graphql.json.
@@ -111,6 +114,9 @@ apis:
     url: graphql/voyage-foods-storefront.graphql
   - type: Documentation
     url: https://shopify.dev/docs/api/storefront
+  x-surface: platform-generated
+  x-platform: shopify
+  x-platform-surface: storefront-graphql
 - aid: voyage-foods:voyage-foods-storefront-json
   name: Voyage Foods Storefront Product JSON API
   description: The read-only, unauthenticated product and collection JSON endpoints the store documents
@@ -134,6 +140,9 @@ apis:
   properties:
   - type: Documentation
     url: https://voyagefoods.com/agents.md
+  x-surface: platform-generated
+  x-platform: shopify
+  x-platform-surface: storefront-json
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
